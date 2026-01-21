@@ -71,7 +71,15 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onUpdateText
                </div>
             </div>
           ) : (
-            <p className="text-slate-300 text-sm italic flex-1">{scene.originalText}</p>
+            <>
+              <p className="text-slate-300 text-sm italic flex-1 mb-3">{scene.originalText}</p>
+              {scene.videoPrompt && (
+                <div className="mt-3 pt-3 border-t border-slate-700">
+                  <h4 className="text-xs font-semibold text-indigo-400 mb-2">🎬 영상 프롬프트</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">{scene.videoPrompt}</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

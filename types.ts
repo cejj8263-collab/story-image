@@ -3,6 +3,8 @@ export interface Scene {
   id: string;
   originalText: string;
   imageUrl?: string;
+  imagePrompt?: string;
+  videoPrompt?: string;
   status: 'pending' | 'generating' | 'completed' | 'error';
   errorMsg?: string;
 }

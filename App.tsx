@@ -19,6 +19,13 @@ function App() {
     return [{ id: '1', name: '탐정 K', description: '검은 코트와 페도라를 쓴 나레이터', imageBase64: null, mimeType: null }];
   });
   
+  const [apiKey, setApiKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem('storyboard_ai_api_key') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [theme, setTheme] = useState<Theme>('economic');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9');
   const [backgroundLocation, setBackgroundLocation] = useState('');
@@ -32,12 +39,19 @@ function App() {
 
   useEffect(() => {
     try {
-      // 로컬 스토리지 용량 초과 시 앱이 멈추지 않도록 처리
       localStorage.setItem('storyboard_ai_characters', JSON.stringify(characters));
     } catch (e) {
       console.warn("로컬 저장소 용량 초과: 이미지가 너무 큽니다. 브라우저 기록에 저장되지 않을 수 있습니다.", e);
     }
   }, [characters]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('storyboard_ai_api_key', apiKey);
+    } catch (e) {
+      console.warn("API 키 저장 실패", e);
+    }
+  }, [apiKey]);
 
   const splitScript = (text: string): string[] => {
     if (!text.trim()) return [];
@@ -71,8 +85,14 @@ function App() {
       setScenes(prev => prev.map(s => s.id === id ? { ...s, status: 'generating' } : s));
       
       try {
-        const url = await generateSceneImage(scenesToGenerate[i].originalText, characters, theme, aspectRatio, backgroundLocation);
-        setScenes(prev => prev.map(s => s.id === id ? { ...s, status: 'completed', imageUrl: url } : s));
+        const result = await generateSceneImage(scenesToGenerate[i].originalText, characters, theme, aspectRatio, backgroundLocation, apiKey);
+        setScenes(prev => prev.map(s => s.id === id ? { 
+          ...s, 
+          status: 'completed', 
+          imageUrl: result.imageUrl,
+          imagePrompt: result.imagePrompt,
+          videoPrompt: result.videoPrompt
+        } : s));
       } catch (err: any) {
         setScenes(prev => prev.map(s => s.id === id ? { ...s, status: 'error', errorMsg: err.message } : s));
       }
@@ -85,12 +105,18 @@ function App() {
     const target = scenes.find(s => s.id === id);
     const text = updatedText || target?.originalText || '';
     try {
-      const url = await generateSceneImage(text, characters, theme, aspectRatio, backgroundLocation);
-      setScenes(prev => prev.map(s => s.id === id ? { ...s, status: 'completed', imageUrl: url } : s));
+      const result = await generateSceneImage(text, characters, theme, aspectRatio, backgroundLocation, apiKey);
+      setScenes(prev => prev.map(s => s.id === id ? { 
+        ...s, 
+        status: 'completed', 
+        imageUrl: result.imageUrl,
+        imagePrompt: result.imagePrompt,
+        videoPrompt: result.videoPrompt
+      } : s));
     } catch (err: any) {
       setScenes(prev => prev.map(s => s.id === id ? { ...s, status: 'error', errorMsg: err.message } : s));
     }
-  }, [scenes, characters, theme, aspectRatio, backgroundLocation]);
+  }, [scenes, characters, theme, aspectRatio, backgroundLocation, apiKey]);
 
   const handleDownloadAll = async () => {
     const list = scenes.filter(s => s.status === 'completed' && s.imageUrl);
@@ -129,6 +155,25 @@ function App() {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+        {/* API Key Input */}
+        <div className="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Google AI API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="API 키를 입력하세요 (aistudio.google.com에서 발급)"
+            className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {!apiKey && (
+            <p className="mt-2 text-sm text-amber-400">
+              ⚠️ API 키가 필요합니다. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300">여기</a>에서 발급받으세요.
+            </p>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           <div className="lg:col-span-4">
             <CharacterSetup 
