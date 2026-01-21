@@ -6,18 +6,26 @@ const TEXT_MODEL_NAME = 'gemini-3-flash-preview';
 const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
 
 const IMAGE_PROMPT_GUIDE = `
-🚨 이미지 프롬프트 요구 사항:
-- 첨부한 캐릭터 이미지를 반드시 활용
-- 등장인물1(탐정 K)은 나레이터/주인공/관찰자로 등장 (모든 장면에 필수는 아님)
-- 스타일: Flat 2D vector art, 금융 만화 스타일
-- 배경: 대본 내용에 맞게, 하얀색 금지
-- 테두리: 굵은 검은색
-- 색상: 깔끔하고 평면적
-- 표정: 대본 내용에 맞춰 다양하게
-- 등장인물 이름이 나오면 첨부한 이미지 활용
-- 텍스트 없음 (자연스러운 것은 가능)
-- 썸네일 수준의 퀄리티
-- 포즈, 표정, 소품 자세히 묘사
+🚨 CRITICAL STYLE REQUIREMENTS (MUST FOLLOW):
+- Style: FLAT 2D VECTOR ART, simple cartoon style for financial/economic content
+- NO 3D rendering, NO realistic style, NO fantasy art, NO photorealistic
+- Simple geometric shapes with BOLD BLACK OUTLINES
+- Flat colors, NO gradients, NO shading, NO complex lighting
+- Minimalist clean design like webtoon thumbnails
+- Think: simple infographic illustration style
+
+CHARACTER & COMPOSITION:
+- Use attached character images
+- Character 1 (Detective K) as narrator/observer (not required in every scene)
+- Characters should be simple, cartoon-like
+- Facial expressions should match the script mood
+- NO text in image (except natural elements like receipts)
+
+BACKGROUND:
+- Match script content
+- NO white backgrounds
+- Simple, flat colored backgrounds
+- Minimal details
 `;
 
 const VIDEO_PROMPT_GUIDE = `
@@ -37,19 +45,21 @@ async function createOptimizedPrompt(sceneText: string, characters: CharacterPro
   
   const characterList = characters.map((c, idx) => `${idx}: ${c.name} - ${c.description}`).join('\n');
   
-  const systemInstruction = `당신은 전문 스토리보드 아티스트입니다.
+  const systemInstruction = `You are a professional storyboard artist for financial/economic educational content.
 
-배경: ${background || '대본 내용에 맞게'}
-등장인물:\n${characterList}
+Setting: ${background || 'Based on script content'}
+Characters:\n${characterList}
 
 ${IMAGE_PROMPT_GUIDE}
 
-대본을 분석하여 다음 JSON을 생성하세요:
+Analyze the script and generate JSON:
 {
-  "imagePrompt": "[Style Wrapper] Flat 2D vector art, minimal clean lines, bold black outlines, simple coloring. [Subject] ... [Visual Details] ... [Background] ...",
-  "activeCharacterIndices": [등장할 캐릭터 인덱스 배열],
-  "videoPrompt": "구체적인 영상 움직임 묘사 (6-8초 분량)"
-}`;
+  "imagePrompt": "FLAT 2D VECTOR ART style, simple cartoon for financial content. Bold black outlines. Simple flat colors. [Character descriptions with poses and expressions]. [Background description]. NO 3D, NO realistic style, NO fantasy art.",
+  "activeCharacterIndices": [array of character indices to use],
+  "videoPrompt": "Detailed animation description in Korean (6-8 seconds)"
+}
+
+REMEMBER: Every imagePrompt MUST start with "FLAT 2D VECTOR ART" and emphasize simple cartoon style.`;
 
   try {
     const model = ai.getGenerativeModel({ 
@@ -86,8 +96,12 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
       const char = characters[index];
       if (char && char.imageBase64) parts.push({ inlineData: { data: char.imageBase64, mimeType: char.mimeType || 'image/png' } });
   }
+  
+  const styleEnforcement = `MANDATORY STYLE: FLAT 2D VECTOR ART. Simple cartoon illustration for financial education content. Bold black outlines. Flat colors. NO 3D rendering. NO realistic style. NO fantasy art. NO photorealism. Think: simple webtoon thumbnail style. 16:9 full-bleed composition.
 
-  parts.push({ text: `16:9 cinematic full-bleed scene. ${imagePrompt}` });
+Scene description: ${imagePrompt}`;
+
+  parts.push({ text: styleEnforcement });
 
   try {
     const model = ai.getGenerativeModel({ model: IMAGE_MODEL_NAME });

@@ -47,8 +47,19 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onUpdateText
           <div className="flex flex-col items-center justify-center p-6 text-center h-full w-full">
             {scene.status === 'pending' && <Clock className="w-8 h-8 text-slate-500 mb-2" />}
             {scene.status === 'generating' && <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin mb-2" />}
-            {scene.status === 'error' && <AlertCircle className="w-8 h-8 text-red-400 mb-2" />}
-            <span className="text-xs text-slate-400">{scene.status === 'generating' ? '생성 중...' : scene.status === 'error' ? '실패' : '대기 중'}</span>
+            {scene.status === 'error' && (
+              <>
+                <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
+                <button 
+                  onClick={() => onRegenerate(scene.id)} 
+                  className="mt-3 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium flex items-center space-x-2 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>다시 시도</span>
+                </button>
+              </>
+            )}
+            <span className="text-xs text-slate-400 mt-2">{scene.status === 'generating' ? '생성 중...' : scene.status === 'error' ? scene.errorMsg || '실패' : '대기 중'}</span>
           </div>
         )}
       </div>
