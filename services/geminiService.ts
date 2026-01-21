@@ -5,6 +5,21 @@ import { CharacterProfile, AspectRatio, Theme } from "../types";
 const TEXT_MODEL_NAME = 'gemini-3-flash-preview';
 const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
 
+const ART_STYLE_DEFINITION = {
+  "art_style": "플랫 2D 벡터 아트 (Flat 2D Vector Art), 깔끔하고 미니멀한 한국형 웹툰/일러스트레이션 스타일",
+  "linework": {
+    "outline": "균일하고 뚜렷한 검은색 외곽선 (Uniform black outlines), 디지털 펜으로 그린 듯한 매끄럽고 정교한 마감",
+    "variation": "선의 굵기 변화가 적고 일정한 두께를 유지하며, 거친 질감 없이 깔끔하게 떨어지는 라인"
+  },
+  "shapes": "사실적인 신체 비율을 기반으로 하되 단순화된 형태, 과장이나 왜곡을 자제하고 안정감 있는 비율 유지",
+  "color_palette": "그라데이션이나 텍스처가 배제된 완전한 단색 채우기 (Solid flat fills), 명도와 채도가 명확하여 가독성이 높은 디지털 색상, 상황에 따라 파스텔톤과 비비드한 원색을 적절히 혼용",
+  "shading": "명암 표현을 극도로 절제함, 턱 밑이나 옷 주름 등 필수적인 부분에만 최소한의 1단계 셀 셰이딩(Cel shading) 적용, 하이라이트 거의 없음",
+  "character_design": "대중적인 웹툰 스타일의 이목구비, 깔끔하게 정리된 헤어스타일, 감정 전달이 명확한 표정 묘사, 남성 캐릭터는 보통 체격, 여성 캐릭터는 부드러운 인상",
+  "mood_and_tone": "정보 전달에 최적화된 명료하고 차분한 분위기, 금융/경제/일상 정보를 설명하기 위한 교육적이면서도 풍자적인 톤",
+  "background": "인물을 부각하기 위해 디테일을 단순화한 배경, 투시도법은 지키되 복잡한 패턴은 생략하고 플랫하게 처리",
+  "technical": "노이즈나 텍스처가 전혀 없는 매끄러운 디지털 벡터 느낌, 텍스트나 인포그래픽 요소(그래프, 간판 등)가 자연스럽게 어우러지는 구성"
+};
+
 const IMAGE_PROMPT_GUIDE = `
 🚨 CRITICAL STYLE REQUIREMENTS (MUST FOLLOW):
 - Style: FLAT 2D VECTOR ART, simple cartoon style for financial/economic content
@@ -54,12 +69,12 @@ ${IMAGE_PROMPT_GUIDE}
 
 Analyze the script and generate JSON:
 {
-  "imagePrompt": "FLAT 2D VECTOR ART style, simple cartoon for financial content. Bold black outlines. Simple flat colors. [Character descriptions with poses and expressions]. [Background description]. NO 3D, NO realistic style, NO fantasy art.",
+  "imagePrompt": "Simple 2D flat cartoon style like Kurzgesagt or educational YouTube thumbnails. Bold black outlines. Flat colors. [Describe characters with simple shapes and expressions]. [Describe flat colored background]. Remember: FLAT 2D CARTOON ONLY, no 3D, no realism, no fantasy landscapes.",
   "activeCharacterIndices": [array of character indices to use],
   "videoPrompt": "Detailed animation description in Korean (6-8 seconds)"
 }
 
-REMEMBER: Every imagePrompt MUST start with "FLAT 2D VECTOR ART" and emphasize simple cartoon style.`;
+CRITICAL: The imagePrompt MUST emphasize "flat 2D cartoon" style and explicitly reject 3D/realistic/fantasy styles.`;
 
   try {
     const model = ai.getGenerativeModel({ 
@@ -97,16 +112,66 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
       if (char && char.imageBase64) parts.push({ inlineData: { data: char.imageBase64, mimeType: char.mimeType || 'image/png' } });
   }
   
-  const styleEnforcement = `MANDATORY STYLE: FLAT 2D VECTOR ART. Simple cartoon illustration for financial education content. Bold black outlines. Flat colors. NO 3D rendering. NO realistic style. NO fantasy art. NO photorealism. Think: simple webtoon thumbnail style. 16:9 full-bleed composition.
+const styleEnforcement = `ART STYLE REQUIREMENTS (MUST FOLLOW EXACTLY):
 
-Scene description: ${imagePrompt}`;
+${JSON.stringify(ART_STYLE_DEFINITION, null, 2)}
+
+COMPOSITION RULES (CRITICAL):
+- ASPECT RATIO: ${aspectRatio} (MUST BE EXACT - 16:9 means 1920x1080, NOT 1:1)
+- FULL-BLEED composition (화면을 완전히 채움)
+- NO white margins, NO borders, NO padding on any side
+- NO letterboxing, NO pillarboxing
+- 상하좌우 여백 없이 ${aspectRatio} 비율로 화면 끝까지 채워진 구도
+- If 16:9, use WIDE horizontal composition (1920x1080)
+- Characters must be FULLY VISIBLE including head, hat, and entire body
+- 탐정의 모자와 얼굴 전체가 프레임 안에 완전히 보여야 함
+- 캐릭터가 잘리지 않도록 적절한 거리 유지
+- ALL visual elements (symbols, icons, props) must be FULLY VISIBLE, NOT CROPPED
+- 물음표(?), 느낌표(!), 그래프, 아이콘 등 모든 요소가 잘리지 않아야 함
+- Background fills entire ${aspectRatio} frame edge-to-edge
+- Compose the scene so that all important elements fit within the safe area
+
+STYLE RULES:
+- 플랫 2D 벡터 아트 (Flat 2D Vector Art), 한국형 웹툰/일러스트레이션 스타일
+- 균일한 검은색 외곽선, 디지털 펜으로 그린 듯한 매끄러운 마감
+- 그라데이션 없는 완전한 단색 채우기 (Solid flat fills)
+- 셀 셰이딩(Cel shading)만 최소한으로 사용
+- 사실적 비율 기반, 과장 자제
+- 깔끔하게 정리된 웹툰 스타일 캐릭터
+- 플랫하고 단순화된 배경
+- 노이즈/텍스처 없는 매끄러운 벡터 느낌
+
+❌ FORBIDDEN:
+- NO white margins or borders
+- NO cropped characters (especially Detective's hat/face)
+- NO 3D rendering
+- NO realistic photography
+- NO fantasy landscape art
+- NO gradients or complex shading
+- NO atmospheric effects
+
+Scene: ${imagePrompt}
+
+REMEMBER: 16:9 full-bleed, no margins, character fully visible with hat and face intact!`;
 
   parts.push({ text: styleEnforcement });
 
   try {
     const model = ai.getGenerativeModel({ model: IMAGE_MODEL_NAME });
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts }]
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        responseMimeType: "image/png",
+        responseSchema: {
+          type: "object",
+          properties: {
+            aspectRatio: { 
+              type: "string",
+              enum: [aspectRatio]
+            }
+          }
+        }
+      }
     });
     const response = await result.response;
 
