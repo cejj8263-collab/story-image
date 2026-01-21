@@ -1,0 +1,5 @@
+{
+  "name": "StoryBoard AI",
+  "description": "대본을 분석하여 일관성 있는 캐릭터 이미지를 생성하는 AI 스토리보드 도구",
+  "requestFramePermissions": []
+}
