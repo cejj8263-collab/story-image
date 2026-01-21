@@ -5,6 +5,59 @@ import { CharacterProfile, AspectRatio, Theme } from "../types";
 const TEXT_MODEL_NAME = 'gemini-3-flash-preview';
 const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
 
+// 이미지를 원하는 비율로 크롭하는 함수
+async function cropImageToAspectRatio(imageUrl: string, aspectRatio: AspectRatio): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      const sourceWidth = img.width;
+      const sourceHeight = img.height;
+      let targetWidth: number, targetHeight: number;
+
+      if (aspectRatio === '16:9') {
+        // 16:9 비율로 크롭
+        if (sourceWidth / sourceHeight > 16 / 9) {
+          // 이미지가 더 넓음 - 높이 기준으로 크롭
+          targetHeight = sourceHeight;
+          targetWidth = sourceHeight * (16 / 9);
+        } else {
+          // 이미지가 더 높음 - 너비 기준으로 크롭
+          targetWidth = sourceWidth;
+          targetHeight = sourceWidth * (9 / 16);
+        }
+      } else {
+        // 9:16 비율로 크롭
+        if (sourceWidth / sourceHeight > 9 / 16) {
+          targetHeight = sourceHeight;
+          targetWidth = sourceHeight * (9 / 16);
+        } else {
+          targetWidth = sourceWidth;
+          targetHeight = sourceWidth * (16 / 9);
+        }
+      }
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      // 중앙에서 크롭
+      const sx = (sourceWidth - targetWidth) / 2;
+      const sy = (sourceHeight - targetHeight) / 2;
+
+      ctx.drawImage(img, sx, sy, targetWidth, targetHeight, 0, 0, targetWidth, targetHeight);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = imageUrl;
+  });
+}
+
 const ART_STYLE_DEFINITION = {
   "art_style": "플랫 2D 벡터 아트 (Flat 2D Vector Art), 깔끔하고 미니멀한 한국형 웹툰/일러스트레이션 스타일",
   "linework": {
@@ -189,8 +242,11 @@ REMEMBER: 16:9 full-bleed, no margins, character fully visible with hat and face
     if (candidates && candidates[0]?.content?.parts) {
         for (const p of candidates[0].content.parts) {
             if (p.inlineData) {
+              const originalImageUrl = `data:${p.inlineData.mimeType || 'image/png'};base64,${p.inlineData.data}`;
+              // 1:1 이미지를 선택된 비율로 크롭
+              const croppedImageUrl = await cropImageToAspectRatio(originalImageUrl, aspectRatio);
               return {
-                imageUrl: `data:${p.inlineData.mimeType || 'image/png'};base64,${p.inlineData.data}`,
+                imageUrl: croppedImageUrl,
                 imagePrompt: imagePrompt || '',
                 videoPrompt: videoPrompt || ''
               };
