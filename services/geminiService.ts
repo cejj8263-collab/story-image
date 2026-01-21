@@ -52,12 +52,19 @@ ${IMAGE_PROMPT_GUIDE}
 }`;
 
   try {
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({ 
       model: TEXT_MODEL_NAME,
-      config: { temperature: 0.7, systemInstruction, responseMimeType: 'application/json' },
-      contents: [{ role: 'user', parts: [{ text: `대본: ${sceneText}` }] }]
+      systemInstruction: systemInstruction
     });
-    return JSON.parse(response.text || "{}");
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: `대본: ${sceneText}` }] }],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: 'application/json'
+      }
+    });
+    const response = await result.response;
+    return JSON.parse(response.text() || "{}");
   } catch (error) {
     console.error('프롬프트 생성 오류:', error);
     return { 
@@ -83,15 +90,15 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
   parts.push({ text: `16:9 cinematic full-bleed scene. ${imagePrompt}` });
 
   try {
-    const response = await ai.models.generateContent({
-      model: IMAGE_MODEL_NAME,
-      contents: { parts },
-      config: { imageConfig: { aspectRatio } }
+    const model = ai.getGenerativeModel({ model: IMAGE_MODEL_NAME });
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts }]
     });
+    const response = await result.response;
 
-    const parts_out = response.candidates?.[0]?.content?.parts;
-    if (parts_out) {
-        for (const p of parts_out) {
+    const candidates = response.candidates;
+    if (candidates && candidates[0]?.content?.parts) {
+        for (const p of candidates[0].content.parts) {
             if (p.inlineData) {
               return {
                 imageUrl: `data:${p.inlineData.mimeType || 'image/png'};base64,${p.inlineData.data}`,
@@ -103,6 +110,7 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
     }
     throw new Error("이미지 없음");
   } catch (error) {
+    console.error('이미지 생성 오류:', error);
     throw new Error("이미지 생성 오류: " + (error as Error).message);
   }
 };
