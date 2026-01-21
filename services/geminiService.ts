@@ -1,8 +1,8 @@
 
-import { GoogleGenAI } from "https://esm.sh/@google/genai@1.30.1";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0";
 import { CharacterProfile, AspectRatio, Theme } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY || "");
 
 const TEXT_MODEL_NAME = 'gemini-3-flash-preview';
 const IMAGE_MODEL_NAME = 'gemini-2.5-flash-image';
