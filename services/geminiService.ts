@@ -112,22 +112,23 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
       if (char && char.imageBase64) parts.push({ inlineData: { data: char.imageBase64, mimeType: char.mimeType || 'image/png' } });
   }
   
-const styleEnforcement = `⚠️ CRITICAL ASPECT RATIO REQUIREMENT - MUST FOLLOW EXACTLY:
-${aspectRatio === '16:9' ? 
-  `🔴 16:9 WIDE HORIZONTAL FORMAT ONLY (1920x1080 pixels)
-  - Create LANDSCAPE orientation image (WIDER than tall)
-  - Use HORIZONTAL composition like YouTube thumbnails
-  - Image width MUST BE almost DOUBLE the height
-  - DO NOT create square or vertical images
-  - This is for DESKTOP/TV viewing` :
-  `🔴 9:16 TALL VERTICAL FORMAT ONLY (1080x1920 pixels)
-  - Create PORTRAIT orientation image (TALLER than wide)
-  - Use VERTICAL composition like Instagram stories
-  - Image height MUST BE almost DOUBLE the width  
-  - DO NOT create square or horizontal images
-  - This is for MOBILE viewing`}
+  // Create ultra-clear aspect ratio prompt
+  const ratioPrompt = aspectRatio === '16:9' 
+    ? 'Create a WIDE HORIZONTAL image. The image must be in 16:9 landscape format (1920x1080). Width is almost DOUBLE the height. NOT square, NOT vertical. HORIZONTAL ONLY.'
+    : 'Create a TALL VERTICAL image. The image must be in 9:16 portrait format (1080x1920). Height is almost DOUBLE the width. NOT square, NOT horizontal. VERTICAL ONLY.';
+  
+  parts.push({ text: ratioPrompt });
+  
+const styleEnforcement = `${imagePrompt}
 
-ART STYLE REQUIREMENTS (MUST FOLLOW EXACTLY):
+MANDATORY IMAGE FORMAT:
+${aspectRatio === '16:9' ? 
+  `- 16:9 aspect ratio (landscape, horizontal)
+  - Image dimensions: 1920 pixels WIDE × 1080 pixels TALL
+  - HORIZONTAL orientation for desktop/YouTube` :
+  `- 9:16 aspect ratio (portrait, vertical)  
+  - Image dimensions: 1080 pixels WIDE × 1920 pixels TALL
+  - VERTICAL orientation for mobile/stories`}
 
 ${JSON.stringify(ART_STYLE_DEFINITION, null, 2)}
 
