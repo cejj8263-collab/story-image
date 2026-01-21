@@ -112,17 +112,30 @@ export const generateSceneImage = async (sceneText: string, characters: Characte
       if (char && char.imageBase64) parts.push({ inlineData: { data: char.imageBase64, mimeType: char.mimeType || 'image/png' } });
   }
   
-const styleEnforcement = `ART STYLE REQUIREMENTS (MUST FOLLOW EXACTLY):
+const styleEnforcement = `⚠️ CRITICAL ASPECT RATIO REQUIREMENT - MUST FOLLOW EXACTLY:
+${aspectRatio === '16:9' ? 
+  `🔴 16:9 WIDE HORIZONTAL FORMAT ONLY (1920x1080 pixels)
+  - Create LANDSCAPE orientation image (WIDER than tall)
+  - Use HORIZONTAL composition like YouTube thumbnails
+  - Image width MUST BE almost DOUBLE the height
+  - DO NOT create square or vertical images
+  - This is for DESKTOP/TV viewing` :
+  `🔴 9:16 TALL VERTICAL FORMAT ONLY (1080x1920 pixels)
+  - Create PORTRAIT orientation image (TALLER than wide)
+  - Use VERTICAL composition like Instagram stories
+  - Image height MUST BE almost DOUBLE the width  
+  - DO NOT create square or horizontal images
+  - This is for MOBILE viewing`}
+
+ART STYLE REQUIREMENTS (MUST FOLLOW EXACTLY):
 
 ${JSON.stringify(ART_STYLE_DEFINITION, null, 2)}
 
 COMPOSITION RULES (CRITICAL):
-- ASPECT RATIO: ${aspectRatio} (MUST BE EXACT - 16:9 means 1920x1080, NOT 1:1)
 - FULL-BLEED composition (화면을 완전히 채움)
 - NO white margins, NO borders, NO padding on any side
-- NO letterboxing, NO pillarboxing
+- NO letterboxing, NO pillarboxing, NO square format
 - 상하좌우 여백 없이 ${aspectRatio} 비율로 화면 끝까지 채워진 구도
-- If 16:9, use WIDE horizontal composition (1920x1080)
 - Characters must be FULLY VISIBLE including head, hat, and entire body
 - 탐정의 모자와 얼굴 전체가 프레임 안에 완전히 보여야 함
 - 캐릭터가 잘리지 않도록 적절한 거리 유지
