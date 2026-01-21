@@ -36,7 +36,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, onRegenerate, onUpdateText
       <div className="w-full md:w-1/2 aspect-video bg-slate-900 relative flex items-center justify-center group overflow-hidden border-b md:border-b-0 md:border-r border-slate-700">
         {scene.status === 'completed' && scene.imageUrl ? (
           <>
-            <img src={scene.imageUrl} className="w-full h-full object-cover block" />
+            <img src={scene.imageUrl} className="w-full h-full object-cover block scale-105" style={{ objectFit: 'cover', objectPosition: 'center' }} />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
               <button onClick={() => window.open(scene.imageUrl, '_blank')} className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white"><ImageIcon className="w-5 h-5" /></button>
               <button onClick={handleDownload} className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white"><Download className="w-5 h-5" /></button>
