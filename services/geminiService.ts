@@ -171,17 +171,17 @@ REMEMBER: 16:9 full-bleed, no margins, character fully visible with hat and face
   parts.push({ text: styleEnforcement });
 
   try {
-    const model = ai.getGenerativeModel({ model: IMAGE_MODEL_NAME });
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts }],
+    const model = ai.getGenerativeModel({ 
+      model: IMAGE_MODEL_NAME,
       generationConfig: {
         temperature: 1,
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 8192,
-        responseMimeType: "image/png",
-        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16'
+        maxOutputTokens: 8192
       }
+    });
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts }]
     });
     const response = await result.response;
 
